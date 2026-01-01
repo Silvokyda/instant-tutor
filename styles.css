@@ -427,3 +427,36 @@ button:disabled {
     align-items: flex-start;
   }
 }
+
+.voice-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 0.75rem;
+}
+
+.voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.voice-toggle input {
+  width: auto;
+}
+
+.voice-controls button {
+  background: transparent;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.voice-controls button.listening {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}

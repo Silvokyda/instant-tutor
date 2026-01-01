@@ -1,153 +1,152 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Instant Tutor – AI Mini-Course Builder</title>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="app">
-      <header class="app-header">
-        <div>
-          <h1>Instant Tutor</h1>
-          <p>
-            Type a topic and get a mini-course, quiz, and an AI tutor to walk
-            you through it.
+
+<head>
+  <meta charset="utf-8" />
+  <title>Instant Tutor – AI Mini-Course Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div>
+        <h1>Instant Tutor</h1>
+        <p>
+          Type a topic and get a mini-course, quiz, and an AI tutor to walk
+          you through it.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge">Portfolio Demo</span>
+        <a href="voice.html" class="badge">Voice mode</a>
+      </div>
+    </header>
+
+    <!-- Step 1: Builder -->
+    <section id="builder" class="card">
+      <h2>1. Describe the class you want</h2>
+      <form id="builder-form" class="builder-form">
+        <div class="field">
+          <label for="topic">Topic</label>
+          <input id="topic" type="text" placeholder="e.g. Basics of SQL joins, Intro to LLMs, React hooks..."
+            required />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="level">Level</label>
+            <select id="level">
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="tone">Tutor tone</label>
+            <select id="tone">
+              <option>Friendly and encouraging</option>
+              <option>Chill and informal</option>
+              <option>Serious and academic</option>
+              <option>Playful and humorous</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="goal">Your goal</label>
+          <input id="goal" type="text"
+            placeholder="e.g. Pass an interview, understand fundamentals, build a side project..." required />
+        </div>
+
+        <button id="generate-btn" type="submit">Generate class</button>
+        <p id="builder-status" class="status-message"></p>
+      </form>
+    </section>
+
+    <!-- Step 2: Course + Tutor -->
+    <section id="main" class="main hidden">
+      <div class="course-column">
+        <div class="card course-info">
+          <h2 id="course-title">Your course will appear here</h2>
+          <p id="course-description" class="muted">
+            Fill out the form above to generate a mini-course.
+          </p>
+          <p class="meta">
+            <span id="course-topic"></span>
+            <span id="course-level"></span>
+            <span id="course-goal"></span>
+            <span id="course-tone"></span>
           </p>
         </div>
-        <span class="badge">Portfolio Demo</span>
-      </header>
 
-      <!-- Step 1: Builder -->
-      <section id="builder" class="card">
-        <h2>1. Describe the class you want</h2>
-        <form id="builder-form" class="builder-form">
-          <div class="field">
-            <label for="topic">Topic</label>
-            <input
-              id="topic"
-              type="text"
-              placeholder="e.g. Basics of SQL joins, Intro to LLMs, React hooks..."
-              required
-            />
+        <div class="card lessons-card">
+          <div class="lessons-header">
+            <h3>Lessons</h3>
           </div>
+          <div id="lessons-list" class="lessons-list"></div>
+        </div>
+      </div>
 
-          <div class="field-row">
-            <div class="field">
-              <label for="level">Level</label>
-              <select id="level">
-                <option>Beginner</option>
-                <option>Intermediate</option>
-                <option>Advanced</option>
-              </select>
+      <div class="tutor-column">
+        <div class="card lesson-card">
+          <div class="lesson-card-header">
+            <h3 id="lesson-title">Select a lesson</h3>
+            <button id="quiz-button" disabled>Quiz me on this lesson</button>
+          </div>
+          <p id="lesson-summary" class="muted"></p>
+          <ul id="lesson-keypoints" class="keypoints"></ul>
+
+          <div id="quiz-section" class="quiz-section">
+            <h4>Quiz</h4>
+            <div id="quiz-content" class="quiz-content">
+              <p class="muted small">
+                Click "Quiz me on this lesson" to generate some questions.
+              </p>
             </div>
-
-            <div class="field">
-              <label for="tone">Tutor tone</label>
-              <select id="tone">
-                <option>Friendly and encouraging</option>
-                <option>Chill and informal</option>
-                <option>Serious and academic</option>
-                <option>Playful and humorous</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="goal">Your goal</label>
-            <input
-              id="goal"
-              type="text"
-              placeholder="e.g. Pass an interview, understand fundamentals, build a side project..."
-              required
-            />
-          </div>
-
-          <button id="generate-btn" type="submit">Generate class</button>
-          <p id="builder-status" class="status-message"></p>
-        </form>
-      </section>
-
-      <!-- Step 2: Course + Tutor -->
-      <section id="main" class="main hidden">
-        <div class="course-column">
-          <div class="card course-info">
-            <h2 id="course-title">Your course will appear here</h2>
-            <p id="course-description" class="muted">
-              Fill out the form above to generate a mini-course.
-            </p>
-            <p class="meta">
-              <span id="course-topic"></span>
-              <span id="course-level"></span>
-              <span id="course-goal"></span>
-              <span id="course-tone"></span>
-            </p>
-          </div>
-
-          <div class="card lessons-card">
-            <div class="lessons-header">
-              <h3>Lessons</h3>
-            </div>
-            <div id="lessons-list" class="lessons-list"></div>
           </div>
         </div>
 
-        <div class="tutor-column">
-          <div class="card lesson-card">
-            <div class="lesson-card-header">
-              <h3 id="lesson-title">Select a lesson</h3>
-              <button id="quiz-button" disabled>Quiz me on this lesson</button>
+        <div class="card chat-card">
+          <div class="chat-header">
+            <div>
+              <h3>AI Tutor</h3>
+              <p class="muted small">
+                Ask questions about the topic, the lesson, or anything you
+                didn't understand.
+              </p>
             </div>
-            <p id="lesson-summary" class="muted"></p>
-            <ul id="lesson-keypoints" class="keypoints"></ul>
 
-            <div id="quiz-section" class="quiz-section">
-              <h4>Quiz</h4>
-              <div id="quiz-content" class="quiz-content">
-                <p class="muted small">
-                  Click "Quiz me on this lesson" to generate some questions.
-                </p>
-              </div>
+            <!-- Voice mode controls -->
+            <div class="voice-controls">
+              <label class="voice-toggle">
+                <input type="checkbox" id="voice-mode-toggle" />
+                Voice mode
+              </label>
+              <button type="button" id="mic-button" disabled>Mic</button>
             </div>
           </div>
 
-          <div class="card chat-card">
-            <div class="chat-header">
-              <div>
-                <h3>AI Tutor</h3>
-                <p class="muted small">
-                  Ask questions about the topic, the lesson, or anything you
-                  didn't understand.
-                </p>
-              </div>
-            </div>
+          <div id="chat-messages" class="chat-messages"></div>
 
-            <div id="chat-messages" class="chat-messages"></div>
-
-            <form id="chat-form" class="chat-form">
-              <input
-                id="chat-input"
-                type="text"
-                placeholder="Ask the tutor something..."
-                autocomplete="off"
-              />
-              <button id="chat-send" type="submit">Send</button>
-            </form>
-          </div>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-input" type="text" placeholder="Ask the tutor something..." autocomplete="off" />
+            <button id="chat-send" type="submit">Send</button>
+          </form>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <footer class="app-footer">
-        <p class="muted small">
-          Built as a personal portfolio project with Groq + serverless APIs.
-        </p>
-      </footer>
-    </div>
+    <footer class="app-footer">
+      <p class="muted small">
+        Built as a personal portfolio project with Groq + serverless APIs.
+      </p>
+    </footer>
+  </div>
 
-    <script src="script.js"></script>
-  </body>
+  <script src="script.js"></script>
+</body>
+
 </html>

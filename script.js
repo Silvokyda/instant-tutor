@@ -2,7 +2,16 @@ let plan = null;
 let currentLessonIndex = null;
 let conversation = [];
 
-// DOM refs
+// ----- Voice state -----
+let voiceModeEnabled = false;
+let speechRecognition = null;
+let isListening = false;
+
+const supportsSpeechRecognition =
+  "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
+const supportsSpeechSynthesis = "speechSynthesis" in window;
+
+// ----- DOM refs -----
 const builderForm = document.getElementById("builder-form");
 const topicInput = document.getElementById("topic");
 const levelSelect = document.getElementById("level");
@@ -34,6 +43,10 @@ const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send");
 
+// voice controls
+const micButton = document.getElementById("mic-button");
+const voiceModeToggle = document.getElementById("voice-mode-toggle");
+
 /* Helpers */
 
 function setBuilderStatus(text, isError = false) {
@@ -53,6 +66,86 @@ function addChatMessage(role, text) {
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 }
 
+/* Voice helpers */
+
+function speak(text) {
+  if (!voiceModeEnabled || !supportsSpeechSynthesis) return;
+  if (!text) return;
+  try {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn("speechSynthesis error:", e);
+  }
+}
+
+function initSpeechRecognition() {
+  if (!supportsSpeechRecognition) return null;
+  if (speechRecognition) return speechRecognition;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recog = new SR();
+  recog.lang = "en-US";
+  recog.interimResults = false;
+  recog.maxAlternatives = 1;
+
+  recog.onstart = () => {
+    isListening = true;
+    if (micButton) {
+      micButton.classList.add("listening");
+      micButton.textContent = "Listening...";
+    }
+  };
+
+  recog.onend = () => {
+    isListening = false;
+    if (micButton) {
+      micButton.classList.remove("listening");
+      micButton.textContent = "Mic";
+    }
+  };
+
+  recog.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+  };
+
+  recog.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    if (!transcript) return;
+    chatInput.value = transcript;
+    // Auto-send the question
+    sendChatMessage();
+  };
+
+  speechRecognition = recog;
+  return recog;
+}
+
+function toggleListening() {
+  if (!voiceModeEnabled) return;
+  const recog = initSpeechRecognition();
+  if (!recog) {
+    alert("Voice input is not supported in this browser. Try Chrome.");
+    return;
+  }
+  try {
+    if (isListening) {
+      recog.stop();
+    } else {
+      if (supportsSpeechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      recog.start();
+    }
+  } catch (e) {
+    console.warn("Error toggling speech recognition:", e);
+  }
+}
+
+/* UI renderers */
+
 function resetChatWithGreeting() {
   clearElement(chatMessagesEl);
   conversation = [];
@@ -64,6 +157,7 @@ function resetChatWithGreeting() {
   } tutor for "${plan.title}". Start by picking a lesson on the left, or ask me anything about ${plan.topic}.`;
   addChatMessage("assistant", greeting);
   conversation.push({ role: "assistant", content: greeting });
+  speak(greeting);
 }
 
 function renderPlan() {
@@ -124,7 +218,6 @@ function selectLesson(index) {
 
   currentLessonIndex = index;
 
-  // Highlight active
   const lessonButtons = lessonsListEl.querySelectorAll(".lesson-item");
   lessonButtons.forEach((btn) => {
     const i = Number(btn.dataset.index);
@@ -141,7 +234,6 @@ function selectLesson(index) {
     lessonKeypointsEl.appendChild(li);
   });
 
-  // Reset quiz section
   clearElement(quizContentEl);
   const p = document.createElement("p");
   p.className = "muted small";
@@ -178,7 +270,9 @@ async function generatePlan() {
     const data = await res.json();
     plan = data.plan;
     renderPlan();
-    setBuilderStatus("Course generated. You can tweak the form and regenerate anytime.");
+    setBuilderStatus(
+      "Course generated. You can tweak the form and regenerate anytime."
+    );
   } catch (err) {
     console.error(err);
     setBuilderStatus(
@@ -307,10 +401,11 @@ async function sendChatMessage() {
   chatInput.disabled = true;
   chatSendBtn.disabled = true;
 
-  const thinkingId = `thinking-${Date.now()}`;
-  addChatMessage("assistant", "Thinking...");
-  const thinkingEl =
-    chatMessagesEl.querySelector(".chat-message.assistant:last-child");
+  const thinkingEl = document.createElement("div");
+  thinkingEl.className = "chat-message assistant";
+  thinkingEl.textContent = "Thinking...";
+  chatMessagesEl.appendChild(thinkingEl);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 
   try {
     const res = await fetch("/api/chat", {
@@ -326,12 +421,13 @@ async function sendChatMessage() {
 
     const data = await res.json();
     const reply = data.reply || "I couldn't come up with a response.";
-    if (thinkingEl) thinkingEl.remove();
+    thinkingEl.remove();
     addChatMessage("assistant", reply);
     conversation.push({ role: "assistant", content: reply });
+    speak(reply);
   } catch (err) {
     console.error(err);
-    if (thinkingEl) thinkingEl.remove();
+    thinkingEl.remove();
     addChatMessage(
       "assistant",
       "Sorry, something went wrong on the server. Please try again."
@@ -358,3 +454,50 @@ chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   sendChatMessage();
 });
+
+// Voice mode wiring
+if (voiceModeToggle) {
+  // Disable toggle if no voice capability at all
+  if (!supportsSpeechRecognition && !supportsSpeechSynthesis) {
+    voiceModeToggle.disabled = true;
+    voiceModeToggle.checked = false;
+  }
+
+  voiceModeToggle.addEventListener("change", (e) => {
+    voiceModeEnabled = e.target.checked;
+
+    if (!voiceModeEnabled) {
+      if (speechRecognition && isListening) {
+        try {
+          speechRecognition.stop();
+        } catch (_) {}
+      }
+      if (supportsSpeechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (micButton) {
+        micButton.disabled = true;
+        micButton.classList.remove("listening");
+        micButton.textContent = "Mic";
+      }
+    } else {
+      if (micButton) {
+        micButton.disabled = !supportsSpeechRecognition;
+      }
+      if (!supportsSpeechRecognition && !supportsSpeechSynthesis) {
+        alert(
+          "Voice mode is not supported in this browser. Try Chrome or Edge."
+        );
+        voiceModeToggle.checked = false;
+        voiceModeEnabled = false;
+      }
+    }
+  });
+}
+
+if (micButton) {
+  micButton.disabled = true; // enabled when voice mode is on and SR supported
+  micButton.addEventListener("click", () => {
+    toggleListening();
+  });
+}

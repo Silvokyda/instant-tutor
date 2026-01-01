@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Instant Tutor – Voice Mode</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <link rel="stylesheet" href="voice.css" />
+  </head>
+  <body>
+    <div class="voice-app">
+      <header class="voice-header">
+        <a href="index.html" class="back-link">← Back</a>
+        <div class="title-block">
+          <h1>Voice Tutor</h1>
+          <p>Tap once to start a live voice session. Tap again to stop.</p>
+        </div>
+      </header>
+
+      <main class="voice-main">
+        <button
+          id="voice-orb"
+          class="voice-orb idle"
+          type="button"
+          aria-label="Tap to start the voice tutor"
+        ></button>
+      </main>
+
+      <section class="voice-info">
+        <p id="voice-state" class="state-label">
+          Tap the orb to start the tutor
+        </p>
+        <p class="hint muted small">
+          Works best in Chrome or Edge (uses browser speech recognition &
+          synthesis).
+        </p>
+      </section>
+
+      <footer class="voice-footer">
+        <span class="muted small"
+          >Instant Tutor · Voice mode · Portfolio demo</span
+        >
+      </footer>
+    </div>
+
+    <script src="voice.js"></script>
+  </body>
+</html>
